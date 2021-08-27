@@ -20,6 +20,9 @@ import re
 import time
 import io
 from datasketch import MinHash, MinHashLSHForest
+import openpyxl
+
+from csv import reader
 
 
 #Number of Permutations
@@ -108,26 +111,36 @@ def predict(text, database, perms, num_results, forest):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    list_of_urls = list()
 
-list_of_urls.append("https://calendar.countyofrenfrew.on.ca/default/Week?StartDate=04/28/2019")
-list_of_urls.append("https://calendar.countyofrenfrew.on.ca/default/Week?StartDate=05/05/2019")
-list_of_urls.append("https://www.abledocs.com/en?gclid=EAIaIQobChMI1baaoK_H8gIVR-DICh1xhgQPEAAYASAAEgKoofD_BwE")
+
+   #with open('C:\\Users\\ChristopherStinson\\OneDrive - AbleDocs Inc\\ADScan WebCrawler Near Duplicate Detection\\URL lists\\visited_urls.xlsx', 'r') as read_obj:
+        # pass the file object to reader() to get the reader object
+        #csv_reader = reader(read_obj)
+        # Pass reader object to list() to get a list of lists
+        #list_of_urls = list(csv_reader)
+    df = pd.read_excel('C:\\Users\\ChristopherStinson\\OneDrive - AbleDocs Inc\\ADScan WebCrawler Near Duplicate Detection\\URL lists\\visited_urls.xlsx', header=None)
+
+#list_of_urls.append("https://calendar.countyofrenfrew.on.ca/default/Week?StartDate=04/28/2019")
+#list_of_urls.append("https://calendar.countyofrenfrew.on.ca/default/Week?StartDate=05/05/2019")
+#list_of_urls.append("https://www.abledocs.com/en?gclid=EAIaIQobChMI1baaoK_H8gIVR-DICh1xhgQPEAAYASAAEgKoofD_BwE")
 
 webpage_content_list = list()
 
 
-for url in list_of_urls:
-    webpage = urllib.request.urlopen(url)
+#TODO need to create csv with smaller number of rows
+for url in df.iterrows():
+    print("Processing url:", url)
+    try:
+        webpage = urllib.request.urlopen(url[1].iloc[0])
+        # type is bytes
+        webpage_content = webpage.read()
+        wbc_decoded = webpage_content.decode("utf-8")
+        webpage_content_list.append(wbc_decoded)
+    except :
+        print("Error with url:", url)
 
-    # type is bytes
-    webpage_content = webpage.read()
 
-    wbc_decoded = webpage_content.decode("utf-8")
-
-    webpage_content_list.append(wbc_decoded)
-
-d = {'url': list_of_urls, 'content': webpage_content_list}
+d = {'url': df.values.tolist(), 'content': webpage_content_list}
 db = pd.DataFrame(d)
 
 forest = get_forest(db, permutations)
